@@ -2,8 +2,22 @@ const chat = document.getElementById("chat");
 const landing = document.getElementById("landing");
 const input = document.getElementById("input");
 
-/* FULL CHAT MEMORY */
+/* FULL CHAT MEMORY (UI ONLY) */
 let messages = [];
+
+/* =========================
+   SESSION ID (IMPORTANT FIX)
+========================= */
+function getSessionId() {
+  let id = localStorage.getItem("sessionId");
+
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("sessionId", id);
+  }
+
+  return id;
+}
 
 /* particles */
 function createParticles() {
@@ -46,7 +60,7 @@ async function sendMessage() {
   addMessage(message, "user");
   input.value = "";
 
-  // store user message
+  // store UI memory
   messages.push({ role: "user", content: message });
 
   try {
@@ -57,7 +71,7 @@ async function sendMessage() {
       },
       body: JSON.stringify({
         message: message,
-        history: messages
+        sessionId: getSessionId()   // 🔥 THIS IS THE FIX
       })
     });
 
@@ -67,7 +81,6 @@ async function sendMessage() {
 
     addMessage(data.reply, "bot");
 
-    // store bot reply
     messages.push({ role: "assistant", content: data.reply });
 
   } catch (err) {
