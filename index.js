@@ -3,6 +3,9 @@ const cors = require("cors");
 const axios = require("axios");
 require("dotenv").config();
 
+// DEBUG: check if Render has the API key
+console.log("GROQ KEY LOADED:", !!process.env.GROQ_API_KEY);
+
 const app = express();
 
 // Render port
