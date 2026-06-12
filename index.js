@@ -10,15 +10,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// DEBUG (checks if Render has the key)
-console.log("GROQ KEY EXISTS:", process.env.GROQ_API_KEY ? "YES" : "NO");
+console.log("OPENROUTER KEY EXISTS:", process.env.OPENROUTER_API_KEY ? "YES" : "NO");
 
 // Health check
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI backend is running");
+  res.send("🧠 LimuAI backend is running (OpenRouter version)");
 });
 
-// CHAT ROUTE (Groq AI)
+// CHAT ROUTE
 app.post("/chat", async (req, res) => {
   const message = req.body.message;
 
@@ -28,14 +27,14 @@ app.post("/chat", async (req, res) => {
 
   try {
     const response = await axios.post(
-      "https://api.groq.com/openai/v1/chat/completions",
+      "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "llama3-8b-8192",
+        model: "mistralai/mistral-7b-instruct",
         messages: [
           {
             role: "system",
             content:
-              "You are LimuAI, a PC building expert. Always ask for user specs first (CPU, GPU, RAM, budget, monitor). Help optimize PCs for gaming and performance."
+              "You are LimuAI, a PC specialist AI. Always ask for specs first (CPU, GPU, RAM, budget, resolution). Give optimized PC building advice."
           },
           {
             role: "user",
@@ -45,32 +44,27 @@ app.post("/chat", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY?.trim()}`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0"
+          "HTTP-Referer": "https://limuai.netlify.app",
+          "X-Title": "LimuAI"
         }
       }
     );
 
     const aiReply = response.data.choices[0].message.content;
 
-    return res.json({
-      reply: aiReply
-    });
+    return res.json({ reply: aiReply });
 
   } catch (error) {
-    console.log("===== GROQ ERROR =====");
-    console.log("STATUS:", error.response?.status);
-    console.log("DATA:", error.response?.data || error.message);
-    console.log("======================");
+    console.log("OPENROUTER ERROR:", error.response?.data || error.message);
 
     return res.json({
-      reply: "AI error: Groq blocked request or invalid key"
+      reply: "AI error (OpenRouter failed request)"
     });
   }
 });
 
-// Render start
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 Server running on port " + PORT);
 });
