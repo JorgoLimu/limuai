@@ -15,7 +15,7 @@ console.log(
 );
 
 // =========================
-// SAFE MEMORY STORAGE
+// SESSION MEMORY STORAGE
 // =========================
 const conversations = {};
 
@@ -23,7 +23,7 @@ const conversations = {};
 // HEALTH CHECK
 // =========================
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (stable memory version)");
+  res.send("🧠 LimuAI running (stable + isolated sessions)");
 });
 
 // =========================
@@ -36,7 +36,7 @@ app.post("/chat", async (req, res) => {
     return res.json({ reply: "No message received" });
   }
 
-  // SAFE SESSION HANDLING (NO CRASH)
+  // Each device gets its own isolated session
   const sid = sessionId || "guest";
 
   if (!conversations[sid]) {
@@ -60,14 +60,19 @@ app.post("/chat", async (req, res) => {
           {
             role: "system",
             content: `
-You are LimuAI, a PC hardware expert assistant.
+You are LimuAI.
 
-RULES:
-- Never invent PC specs
-- If unknown, say unknown
-- Use only conversation context
-- Be accurate, simple, and helpful
-- Remember info within this session only
+ABSOLUTE RULES:
+- Each session is a separate anonymous user
+- NEVER assume or guess the user's name
+- NEVER invent identity, even if it seems consistent
+- Only use a name if the user explicitly writes it in THIS message
+- Otherwise treat user as anonymous
+- Do not personalize responses with identity
+- Do not hallucinate user information
+- Only use provided conversation data
+
+You are a PC hardware assistant only.
 `
           },
           ...history
@@ -85,13 +90,13 @@ RULES:
 
     const aiReply = response.data.choices[0].message.content;
 
-    // store bot reply
+    // store assistant reply
     history.push({
       role: "assistant",
       content: aiReply
     });
 
-    // prevent infinite memory growth (keep last 20 messages)
+    // prevent memory overload
     if (history.length > 20) {
       conversations[sid] = history.slice(-20);
     }
@@ -101,7 +106,7 @@ RULES:
     console.log("OPENROUTER ERROR:", error.response?.data || error.message);
 
     return res.json({
-      reply: "AI error (please try again)"
+      reply: "AI error (try again)"
     });
   }
 });
