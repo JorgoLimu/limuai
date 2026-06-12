@@ -145,7 +145,7 @@ h1 {
   border-bottom-left-radius: 4px;
 }
 
-/* INPUT BAR (MODERN GLASS STYLE) */
+/* INPUT BAR */
 .input-area {
   position: fixed;
   bottom: 0;
@@ -187,7 +187,7 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* FADE IN */
+/* ANIMATION */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -196,4 +196,64 @@ button:hover {
 /* HIDDEN */
 .hidden {
   display: none;
+}
+
+/* =========================
+   MOBILE FIX (SAFE ADDITION)
+   DOES NOT AFFECT PC
+========================= */
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .chat {
+    padding: 12px;
+    padding-bottom: 100px;
+    gap: 10px;
+  }
+
+  .msg {
+    max-width: 88%;
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .input-area {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  input {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 38px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .substatus {
+    font-size: 9px;
+  }
+
+  .icon {
+    width: 28px;
+    height: 28px;
+    opacity: 0.12;
+  }
+
+  .particles span {
+    opacity: 0.12;
+  }
 }
