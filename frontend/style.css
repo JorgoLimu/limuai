@@ -107,7 +107,7 @@ h1 {
   text-transform: uppercase;
 }
 
-/* CHAT CONTAINER */
+/* CHAT */
 .chat {
   position: fixed;
   inset: 0;
@@ -120,32 +120,30 @@ h1 {
   scroll-behavior: smooth;
 }
 
-/* MESSAGE BASE */
+/* MESSAGE */
 .msg {
   padding: 12px 14px;
   border-radius: 14px;
   max-width: 75%;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   word-wrap: break-word;
   animation: fadeIn 0.15s ease-in;
 }
 
-/* USER MESSAGE */
 .user {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   margin-left: auto;
   border-bottom-right-radius: 4px;
 }
 
-/* BOT MESSAGE */
 .bot {
   background: rgba(31, 41, 55, 0.9);
   border: 1px solid rgba(0,245,255,0.15);
   border-bottom-left-radius: 4px;
 }
 
-/* INPUT BAR */
+/* INPUT */
 .input-area {
   position: fixed;
   bottom: 0;
@@ -159,7 +157,6 @@ h1 {
   border-top: 1px solid rgba(0,245,255,0.15);
 }
 
-/* INPUT */
 input {
   flex: 1;
   padding: 12px;
@@ -168,10 +165,9 @@ input {
   background: #0f172a;
   color: white;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
-/* BUTTON */
 button {
   padding: 12px 16px;
   border: none;
@@ -193,14 +189,12 @@ button:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* HIDDEN */
 .hidden {
   display: none;
 }
 
 /* =========================
-   MOBILE FIX (SAFE ADDITION)
-   DOES NOT AFFECT PC
+   MOBILE FIX (IMPROVED UI)
 ========================= */
 @media (max-width: 768px) {
 
@@ -210,14 +204,14 @@ button:hover {
 
   .chat {
     padding: 12px;
-    padding-bottom: 100px;
+    padding-bottom: 110px;
     gap: 10px;
   }
 
   .msg {
-    max-width: 88%;
-    font-size: 14px;
-    padding: 10px 12px;
+    max-width: 92%;
+    font-size: 16px;
+    padding: 12px 14px;
   }
 
   .input-area {
@@ -226,17 +220,17 @@ button:hover {
   }
 
   input {
-    padding: 10px;
-    font-size: 14px;
+    padding: 12px;
+    font-size: 16px;
   }
 
   button {
-    padding: 10px 14px;
-    font-size: 13px;
+    padding: 12px 14px;
+    font-size: 14px;
   }
 
   h1 {
-    font-size: 38px;
+    font-size: 42px;
   }
 
   .subtitle {
@@ -244,16 +238,16 @@ button:hover {
   }
 
   .substatus {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .icon {
-    width: 28px;
-    height: 28px;
-    opacity: 0.12;
+    width: 34px;
+    height: 34px;
+    opacity: 0.15;
   }
 
   .particles span {
-    opacity: 0.12;
+    opacity: 0.15;
   }
 }
