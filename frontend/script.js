@@ -2,7 +2,7 @@ const chat = document.getElementById("chat");
 const landing = document.getElementById("landing");
 
 /* =========================
-   SESSION SYSTEM
+   SESSION SYSTEM (FIX)
 ========================= */
 function getSessionId() {
   let id = localStorage.getItem("sessionId");
@@ -62,7 +62,6 @@ async function sendMessage() {
   if (!message) return;
 
   startChat();
-
   addMessage(message, "user");
   input.value = "";
 
@@ -74,7 +73,7 @@ async function sendMessage() {
       },
       body: JSON.stringify({
         message: message,
-        sessionId: getSessionId()   // 🔥 FIXED HERE
+        sessionId: getSessionId()   // 🔥 FIXED
       })
     });
 
@@ -83,10 +82,6 @@ async function sendMessage() {
     }
 
     const data = await res.json();
-
-    if (!data.reply) {
-      throw new Error("No reply from backend");
-    }
 
     addMessage(data.reply, "bot");
 
