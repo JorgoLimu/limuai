@@ -23,7 +23,7 @@ const conversations = {};
 // HEALTH CHECK
 // =========================
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (stable + isolated sessions)");
+  res.send("🧠 LimuAI running (true isolated sessions)");
 });
 
 // =========================
@@ -36,8 +36,15 @@ app.post("/chat", async (req, res) => {
     return res.json({ reply: "No message received" });
   }
 
-  // Each device gets its own isolated session
-  const sid = sessionId || "guest";
+  // ❌ CRITICAL FIX:
+  // Do NOT fallback to "guest" — it causes ALL users to share memory
+  if (!sessionId) {
+    return res.json({
+      reply: "Missing sessionId (frontend must generate unique session per browser)"
+    });
+  }
+
+  const sid = sessionId;
 
   if (!conversations[sid]) {
     conversations[sid] = [];
@@ -63,14 +70,13 @@ app.post("/chat", async (req, res) => {
 You are LimuAI.
 
 ABSOLUTE RULES:
-- Each session is a separate anonymous user
-- NEVER assume or guess the user's name (DO NOT use "Jorgo" or any name)
-- NEVER invent identity, even if it seems consistent
-- Only use a name if the user explicitly writes it in THIS message
-- Otherwise treat user as anonymous
-- Do not personalize responses with identity
-- Do not hallucinate user information
-- Only use provided conversation data
+- Each session is completely independent
+- NEVER assume or reuse any identity or name (including "Jorgo")
+- NEVER guess user identity from past messages
+- ONLY use information in THIS session
+- If no name is given in current message, treat user as anonymous
+- Do NOT carry identity across sessions or users
+- Do NOT hallucinate names or personal info
 
 You are a PC hardware assistant only.
 `
@@ -96,7 +102,7 @@ You are a PC hardware assistant only.
       content: aiReply
     });
 
-    // prevent memory overload
+    // limit memory size
     if (history.length > 20) {
       conversations[sid] = history.slice(-20);
     }
