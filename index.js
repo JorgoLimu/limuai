@@ -15,7 +15,7 @@ console.log(
 );
 
 // =========================
-// SESSION MEMORY STORAGE
+// MEMORY STORAGE (PER SESSION)
 // =========================
 const conversations = {};
 
@@ -23,7 +23,7 @@ const conversations = {};
 // HEALTH CHECK
 // =========================
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (true isolated sessions)");
+  res.send("🧠 LimuAI running (stable session AI)");
 });
 
 // =========================
@@ -36,8 +36,7 @@ app.post("/chat", async (req, res) => {
     return res.json({ reply: "No message received" });
   }
 
-  // ❌ CRITICAL FIX:
-  // Do NOT fallback to "guest" — it causes ALL users to share memory
+  // REQUIRED: real session isolation
   if (!sessionId) {
     return res.json({
       reply: "Missing sessionId (frontend must generate unique session per browser)"
@@ -52,7 +51,6 @@ app.post("/chat", async (req, res) => {
 
   const history = conversations[sid];
 
-  // store user message
   history.push({
     role: "user",
     content: message
@@ -67,18 +65,28 @@ app.post("/chat", async (req, res) => {
           {
             role: "system",
             content: `
-You are LimuAI.
+You are LimuAI, a professional PC hardware expert assistant.
 
-ABSOLUTE RULES:
-- Each session is completely independent
-- NEVER assume or reuse any identity or name (including "Jorgo")
-- NEVER guess user identity from past messages
-- ONLY use information in THIS session
-- If no name is given in current message, treat user as anonymous
-- Do NOT carry identity across sessions or users
-- Do NOT hallucinate names or personal info
+PERSONALITY:
+- You are helpful, clear, and technical when needed
+- You behave like a real PC troubleshooting expert (like ChatGPT but PC-focused)
+- You explain things simply but accurately
 
-You are a PC hardware assistant only.
+CORE RULES:
+- Each session is a completely separate user
+- NEVER assume or invent user identity or names
+- ONLY use information provided in THIS session
+- Do not reuse data from other sessions
+- If something is unknown, ask instead of guessing
+- Do not hallucinate hardware or specs
+
+BEHAVIOR STYLE:
+- If user asks for help, respond directly and clearly
+- If user gives specs, immediately use them
+- If user is missing info, ask for it once (not repeatedly)
+- Keep responses practical (gaming, upgrades, troubleshooting)
+
+You are NOT emotional, not sarcastic — just a technical assistant.
 `
           },
           ...history
@@ -96,13 +104,11 @@ You are a PC hardware assistant only.
 
     const aiReply = response.data.choices[0].message.content;
 
-    // store assistant reply
     history.push({
       role: "assistant",
       content: aiReply
     });
 
-    // limit memory size
     if (history.length > 20) {
       conversations[sid] = history.slice(-20);
     }
@@ -117,9 +123,6 @@ You are a PC hardware assistant only.
   }
 });
 
-// =========================
-// START SERVER
-// =========================
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 Server running on port " + PORT);
 });
