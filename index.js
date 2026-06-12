@@ -9,47 +9,39 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-console.log("OPENROUTER KEY EXISTS:", process.env.OPENROUTER_API_KEY ? "YES" : "NO");
+console.log(
+  "OPENROUTER KEY EXISTS:",
+  process.env.OPENROUTER_API_KEY ? "YES" : "NO"
+);
 
-// simple in-memory store (per server session)
-const memory = {};
+// =========================
+// SESSION MEMORY (RAM ONLY)
+// =========================
+const conversations = {};
 
-// extract simple PC specs safely (NO guessing)
-function extractSpecs(text) {
-  const specs = {};
-
-  if (/rx|gtx|rtx|radeon/i.test(text)) specs.gpu = text.match(/(rx|gtx|rtx|radeon)[^, ]*/i)?.[0];
-  if (/i[3579]-?\d{3,5}/i.test(text)) specs.cpu = text.match(/i[3579]-?\d{3,5}/i)?.[0];
-  if (/\d+\s?gb\s?ram/i.test(text)) specs.ram = text.match(/\d+\s?gb\s?ram/i)?.[0];
-
-  return specs;
-}
-
-// Health
+// Health check
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI fixed memory version running");
+  res.send("🧠 LimuAI running (session memory only)");
 });
 
-// CHAT
+// CHAT ROUTE
 app.post("/chat", async (req, res) => {
-  const { message, sessionId = "default" } = req.body;
+  const { message, sessionId = "global" } = req.body;
 
-  if (!message) return res.json({ reply: "No message received" });
-
-  if (!memory[sessionId]) {
-    memory[sessionId] = {
-      specs: {}
-    };
+  if (!message) {
+    return res.json({ reply: "No message received" });
   }
 
-  // try extract specs ONLY from real text
-  const extracted = extractSpecs(message);
-  memory[sessionId].specs = {
-    ...memory[sessionId].specs,
-    ...extracted
-  };
+  // create session if missing
+  if (!conversations[sessionId]) {
+    conversations[sessionId] = [];
+  }
 
-  const userSpecs = memory[sessionId].specs;
+  // store user message
+  conversations[sessionId].push({
+    role: "user",
+    content: message
+  });
 
   try {
     const response = await axios.post(
@@ -60,28 +52,28 @@ app.post("/chat", async (req, res) => {
           {
             role: "system",
             content: `
-You are LimuAI, a PC hardware expert.
+You are LimuAI, a professional PC hardware expert assistant.
+
+PERSONALITY:
+- You are helpful, direct, and technical when needed
+- You help users with PC builds, upgrades, and troubleshooting
 
 CRITICAL RULES:
-- NEVER invent PC specs.
-- Only use specs that are explicitly given.
-- If something is unknown, say "unknown".
-- Do NOT guess CPUs or GPUs.
-- Do NOT hallucinate full builds.
-
-KNOWN USER SPECS:
-${JSON.stringify(userSpecs)}
+- You remember everything inside this session
+- Never say you forgot or that this is the first message
+- Never invent PC specs or hardware
+- Only use information given in this conversation
+- If something is unknown, say it is unknown instead of guessing
+- Do not hallucinate full PC builds
 
 BEHAVIOR:
-- If specs exist → use them directly
-- If missing → ask ONLY for missing part
-- Be accurate, not creative
+- If user provides specs, use them immediately
+- If user asks "what are my specs", extract from chat history
+- If user asks for upgrades, respond directly
 `
           },
-          {
-            role: "user",
-            content: message
-          }
+
+          ...conversations[sessionId]
         ]
       },
       {
@@ -94,13 +86,21 @@ BEHAVIOR:
       }
     );
 
-    return res.json({
-      reply: response.data.choices[0].message.content
+    const aiReply = response.data.choices[0].message.content;
+
+    // store assistant reply
+    conversations[sessionId].push({
+      role: "assistant",
+      content: aiReply
     });
 
-  } catch (err) {
-    console.log(err.response?.data || err.message);
-    return res.json({ reply: "AI error" });
+    return res.json({ reply: aiReply });
+  } catch (error) {
+    console.log("OPENROUTER ERROR:", error.response?.data || error.message);
+
+    return res.json({
+      reply: "AI error (OpenRouter failed request)"
+    });
   }
 });
 
