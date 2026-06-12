@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+
+  <!-- ✅ IMPORTANT MOBILE FIX -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>LimuAI</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 
 <body>
@@ -54,7 +58,7 @@
 <div class="chat hidden" id="chat"></div>
 
 <div class="input-area">
-  <input id="input" placeholder="Message LimuAI..." autocomplete="off" />
+  <input id="input" placeholder="Message LimuAI..." autocomplete="off" inputmode="text" />
   <button onclick="sendMessage()">Send</button>
 </div>
 
