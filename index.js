@@ -29,12 +29,12 @@ app.post("/chat", async (req, res) => {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: "meta-llama/llama-3.1-8b-instruct",
         messages: [
           {
             role: "system",
             content:
-              "You are LimuAI, a PC specialist AI. Always ask for specs first (CPU, GPU, RAM, budget, resolution). Give optimized PC building advice."
+              "You are LimuAI, a PC specialist AI. Always ask for the user's specs first (CPU, GPU, RAM, storage, motherboard, PSU, monitor resolution, budget, and intended use). Never assume specs. Give accurate PC building, upgrade, troubleshooting, and performance advice based on the user's hardware and needs."
           },
           {
             role: "user",
@@ -46,7 +46,7 @@ app.post("/chat", async (req, res) => {
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://limuai.netlify.app",
+          "HTTP-Referer": "https://jorgolimuai.netlify.app",
           "X-Title": "LimuAI"
         }
       }
@@ -54,7 +54,9 @@ app.post("/chat", async (req, res) => {
 
     const aiReply = response.data.choices[0].message.content;
 
-    return res.json({ reply: aiReply });
+    return res.json({
+      reply: aiReply
+    });
 
   } catch (error) {
     console.log("OPENROUTER ERROR:", error.response?.data || error.message);
