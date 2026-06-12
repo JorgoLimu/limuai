@@ -1,5 +1,9 @@
 const chat = document.getElementById("chat");
 const landing = document.getElementById("landing");
+const input = document.getElementById("input");
+
+/* FULL CHAT MEMORY */
+let messages = [];
 
 /* particles */
 function createParticles() {
@@ -13,7 +17,7 @@ function createParticles() {
 }
 createParticles();
 
-/* chat */
+/* UI message */
 function addMessage(text, type) {
   const div = document.createElement("div");
   div.classList.add("msg", type);
@@ -22,7 +26,7 @@ function addMessage(text, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-/* start screen */
+/* start chat */
 function startChat() {
   landing.style.opacity = "0";
 
@@ -32,16 +36,18 @@ function startChat() {
   }, 400);
 }
 
-/* send message */
+/* SEND MESSAGE */
 async function sendMessage() {
-  const input = document.getElementById("input");
   const message = input.value.trim();
-
   if (!message) return;
 
   startChat();
+
   addMessage(message, "user");
   input.value = "";
+
+  // store user message
+  messages.push({ role: "user", content: message });
 
   try {
     const res = await fetch("https://limuai-backend.onrender.com/chat", {
@@ -49,21 +55,20 @@ async function sendMessage() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({
+        message: message,
+        history: messages
+      })
     });
 
-    // safety check (IMPORTANT)
-    if (!res.ok) {
-      throw new Error("Server error: " + res.status);
-    }
+    if (!res.ok) throw new Error("Server error");
 
     const data = await res.json();
 
-    if (!data.reply) {
-      throw new Error("No reply from backend");
-    }
-
     addMessage(data.reply, "bot");
+
+    // store bot reply
+    messages.push({ role: "assistant", content: data.reply });
 
   } catch (err) {
     console.error(err);
