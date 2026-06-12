@@ -15,32 +15,37 @@ console.log(
 );
 
 // =========================
-// MEMORY STORAGE (PER USER)
+// STRICT PER-SESSION MEMORY
 // =========================
 const conversations = {};
 
 // Health check
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (clean session memory system)");
+  res.send("🧠 LimuAI running (STRICT per-device sessions)");
 });
 
 // CHAT ROUTE
 app.post("/chat", async (req, res) => {
   const { message, sessionId } = req.body;
 
+  // ❌ NO SESSION = REJECT (prevents shared/global memory bugs)
+  if (!sessionId) {
+    return res.json({
+      reply: "Missing sessionId. Each device must have its own session."
+    });
+  }
+
   if (!message) {
     return res.json({ reply: "No message received" });
   }
 
-  // require sessionId for proper separation
-  const sid = sessionId || "global";
-
-  if (!conversations[sid]) {
-    conversations[sid] = [];
+  // create isolated memory per device
+  if (!conversations[sessionId]) {
+    conversations[sessionId] = [];
   }
 
   // store user message
-  conversations[sid].push({
+  conversations[sessionId].push({
     role: "user",
     content: message
   });
@@ -56,23 +61,16 @@ app.post("/chat", async (req, res) => {
             content: `
 You are LimuAI, a PC hardware expert assistant.
 
-PERSONALITY:
-- helpful, direct, technical when needed
-
-RULES:
-- Remember everything in this session
-- NEVER invent PC specs, hardware, or user data
-- If info is missing, say "unknown"
-- Use only provided conversation context
-- Do not hallucinate full PC builds
-
-BEHAVIOR:
-- If user gives specs, use them immediately
-- If user asks for their specs, extract from conversation history
-- Focus on accurate PC troubleshooting and upgrades
+CRITICAL RULES:
+- You ONLY know the current session
+- You MUST NOT mix users or devices
+- You MUST NOT assume identity or reuse names
+- If something is not in this session, say unknown
+- Never invent PC specs
+- Be accurate, direct, and technical
 `
           },
-          ...conversations[sid]
+          ...conversations[sessionId]
         ]
       },
       {
@@ -88,7 +86,7 @@ BEHAVIOR:
     const aiReply = response.data.choices[0].message.content;
 
     // store assistant reply
-    conversations[sid].push({
+    conversations[sessionId].push({
       role: "assistant",
       content: aiReply
     });
