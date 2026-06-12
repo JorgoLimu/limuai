@@ -1,12 +1,8 @@
 const chat = document.getElementById("chat");
 const landing = document.getElementById("landing");
-const input = document.getElementById("input");
-
-/* FULL CHAT MEMORY (UI ONLY) */
-let messages = [];
 
 /* =========================
-   SESSION ID (IMPORTANT FIX)
+   SESSION SYSTEM
 ========================= */
 function getSessionId() {
   let id = localStorage.getItem("sessionId");
@@ -19,7 +15,9 @@ function getSessionId() {
   return id;
 }
 
-/* particles */
+/* =========================
+   PARTICLES
+========================= */
 function createParticles() {
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
@@ -31,7 +29,9 @@ function createParticles() {
 }
 createParticles();
 
-/* UI message */
+/* =========================
+   CHAT UI
+========================= */
 function addMessage(text, type) {
   const div = document.createElement("div");
   div.classList.add("msg", type);
@@ -40,7 +40,9 @@ function addMessage(text, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-/* start chat */
+/* =========================
+   START CHAT
+========================= */
 function startChat() {
   landing.style.opacity = "0";
 
@@ -50,18 +52,19 @@ function startChat() {
   }, 400);
 }
 
-/* SEND MESSAGE */
+/* =========================
+   SEND MESSAGE
+========================= */
 async function sendMessage() {
+  const input = document.getElementById("input");
   const message = input.value.trim();
+
   if (!message) return;
 
   startChat();
 
   addMessage(message, "user");
   input.value = "";
-
-  // store UI memory
-  messages.push({ role: "user", content: message });
 
   try {
     const res = await fetch("https://limuai-backend.onrender.com/chat", {
@@ -71,17 +74,21 @@ async function sendMessage() {
       },
       body: JSON.stringify({
         message: message,
-        sessionId: getSessionId()   // 🔥 THIS IS THE FIX
+        sessionId: getSessionId()   // 🔥 FIXED HERE
       })
     });
 
-    if (!res.ok) throw new Error("Server error");
+    if (!res.ok) {
+      throw new Error("Server error: " + res.status);
+    }
 
     const data = await res.json();
 
-    addMessage(data.reply, "bot");
+    if (!data.reply) {
+      throw new Error("No reply from backend");
+    }
 
-    messages.push({ role: "assistant", content: data.reply });
+    addMessage(data.reply, "bot");
 
   } catch (err) {
     console.error(err);
