@@ -3,12 +3,8 @@ const cors = require("cors");
 const axios = require("axios");
 require("dotenv").config();
 
-// DEBUG: check if Render has the API key
-console.log("GROQ KEY LOADED:", !!process.env.GROQ_API_KEY);
-
 const app = express();
 
-// Render port
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -19,7 +15,7 @@ app.get("/", (req, res) => {
   res.send("🧠 LimuAI backend is running");
 });
 
-// CHAT ROUTE (REAL AI)
+// CHAT ROUTE
 app.post("/chat", async (req, res) => {
   const message = req.body.message;
 
@@ -35,17 +31,8 @@ app.post("/chat", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: `
-You are LimuAI, a professional PC building assistant.
-
-Your job:
-- Ask users for their PC specs if missing (CPU, GPU, RAM, budget, monitor resolution)
-- Do NOT assume specs
-- Help users build the best PC for THEIR needs
-- Optimize performance for their setup
-- Suggest upgrades only if needed
-- Be clear and practical, not overly technical unless asked
-`
+            content:
+              "You are LimuAI, a PC specialist AI. Ask users for specs (CPU, GPU, RAM, budget, resolution) before recommending anything."
           },
           {
             role: "user",
@@ -63,15 +50,19 @@ Your job:
 
     const aiReply = response.data.choices[0].message.content;
 
-    res.json({
-      reply: aiReply
-    });
+    return res.json({ reply: aiReply });
 
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.log("===== GROQ FULL ERROR =====");
+    console.log("STATUS:", error.response?.status);
+    console.log("DATA:", error.response?.data);
+    console.log("MESSAGE:", error.message);
+    console.log("===========================");
 
-    res.json({
-      reply: "AI error: check API key or Groq limit"
+    return res.json({
+      reply: error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message
     });
   }
 });
