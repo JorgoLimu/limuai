@@ -2,10 +2,11 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
   font-family: Arial, sans-serif;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   color: white;
   background: radial-gradient(circle at top, #0f1a33, #000);
@@ -23,11 +24,11 @@ body {
 /* PARTICLES */
 .particles span {
   position: fixed;
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
   background: #00f5ff;
   border-radius: 50%;
-  opacity: 0.2;
+  opacity: 0.12;
   animation: float 6s infinite ease-in-out;
 }
 
@@ -44,17 +45,17 @@ body {
 
 @keyframes float {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
+  50% { transform: translateY(-12px); }
   100% { transform: translateY(0); }
 }
 
 /* ICONS */
 .icon {
   position: fixed;
-  width: 42px;
-  height: 42px;
-  opacity: 0.18;
-  filter: drop-shadow(0 0 12px #00f5ff);
+  width: 34px;
+  height: 34px;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 10px #00f5ff);
   animation: float 6s ease-in-out infinite;
 }
 
@@ -76,8 +77,10 @@ body {
   text-align: center;
 }
 
-/* LOGO */
-.logo {
+/* LOGO FIX */
+.logo svg {
+  width: 130px;
+  height: 130px;
   filter: drop-shadow(0 0 25px #00f5ff);
   animation: pulse 2.2s ease-in-out infinite;
 }
@@ -89,12 +92,12 @@ body {
 }
 
 h1 {
-  font-size: 58px;
+  font-size: 46px;
   margin: 10px 0;
 }
 
 .subtitle {
-  font-size: 16px;
+  font-size: 14px;
   color: #00f5ff;
   opacity: 0.9;
 }
@@ -111,21 +114,20 @@ h1 {
 .chat {
   position: fixed;
   inset: 0;
-  padding: 18px;
-  padding-bottom: 90px;
+  padding: 14px;
+  padding-bottom: 110px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  scroll-behavior: smooth;
 }
 
 /* MESSAGE */
 .msg {
   padding: 12px 14px;
   border-radius: 14px;
-  max-width: 75%;
-  font-size: 14px;
+  max-width: 90%;
+  font-size: 16px;
   line-height: 1.5;
   word-wrap: break-word;
   animation: fadeIn 0.15s ease-in;
@@ -152,11 +154,12 @@ h1 {
   display: flex;
   gap: 10px;
   padding: 12px;
-  background: rgba(10,15,25,0.75);
+  background: rgba(10,15,25,0.85);
   backdrop-filter: blur(14px);
   border-top: 1px solid rgba(0,245,255,0.15);
 }
 
+/* IMPORTANT: prevents mobile zoom */
 input {
   flex: 1;
   padding: 12px;
@@ -165,7 +168,7 @@ input {
   background: #0f172a;
   color: white;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 button {
@@ -176,11 +179,6 @@ button {
   color: black;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  transform: scale(1.05);
 }
 
 /* ANIMATION */
@@ -194,60 +192,36 @@ button:hover {
 }
 
 /* =========================
-   MOBILE FIX (IMPROVED UI)
+   MOBILE FIX (FINAL CLEAN VERSION)
 ========================= */
 @media (max-width: 768px) {
 
-  body {
-    overflow-x: hidden;
-  }
-
   .chat {
     padding: 12px;
-    padding-bottom: 110px;
-    gap: 10px;
+    padding-bottom: 120px;
   }
 
   .msg {
-    max-width: 92%;
+    max-width: 95%;
     font-size: 16px;
-    padding: 12px 14px;
-  }
-
-  .input-area {
-    padding: 10px;
-    gap: 8px;
-  }
-
-  input {
     padding: 12px;
-    font-size: 16px;
-  }
-
-  button {
-    padding: 12px 14px;
-    font-size: 14px;
   }
 
   h1 {
-    font-size: 42px;
+    font-size: 38px;
   }
 
   .subtitle {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .substatus {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .icon {
-    width: 34px;
-    height: 34px;
-    opacity: 0.15;
-  }
-
-  .particles span {
-    opacity: 0.15;
+    width: 28px;
+    height: 28px;
+    opacity: 0.1;
   }
 }
