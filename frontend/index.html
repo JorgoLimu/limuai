@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LimuAI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<div class="particles">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<img class="icon i1" src="https://cdn-icons-png.flaticon.com/512/1055/1055687.png">
+<img class="icon i2" src="https://cdn-icons-png.flaticon.com/512/2920/2920277.png">
+<img class="icon i3" src="https://cdn-icons-png.flaticon.com/512/2721/2721297.png">
+<img class="icon i4" src="https://cdn-icons-png.flaticon.com/512/4149/4149688.png">
+
+<div class="landing" id="landing">
+
+  <div class="card">
+
+    <div class="logo">
+      <svg viewBox="0 0 100 100" width="180" height="180">
+        <defs>
+          <radialGradient id="g">
+            <stop offset="0%" stop-color="#00f5ff"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+          </radialGradient>
+        </defs>
+
+        <circle cx="50" cy="50" r="40" fill="none" stroke="url(#g)" stroke-width="3"/>
+        <path d="M30 50 Q40 20 50 50 Q60 80 70 50" fill="none" stroke="#00f5ff" stroke-width="2"/>
+        <circle cx="30" cy="50" r="3" fill="#00f5ff"/>
+        <circle cx="50" cy="50" r="3" fill="#00f5ff"/>
+        <circle cx="70" cy="50" r="3" fill="#00f5ff"/>
+      </svg>
+    </div>
+
+    <h1>LimuAI</h1>
+    <div class="subtitle">PC Troubleshooting AI Assistant</div>
+
+    <!-- ONLY TEXT CHANGED HERE -->
+    <div class="substatus">
+      system diagnostics • performance analysis • troubleshooting guidance
+    </div>
+
+  </div>
+</div>
+
+<div class="chat hidden" id="chat"></div>
+
+<div class="input-area">
+  <input id="input" placeholder="Message LimuAI..." />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
