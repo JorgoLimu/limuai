@@ -35,23 +35,32 @@ app.post("/chat", async (req, res) => {
           {
             role: "system",
             content: `
-You are LimuAI, a smart PC assistant like ChatGPT.
+You are LimuAI, a highly intelligent PC hardware expert assistant.
 
-RULES:
-- Respond naturally like a helpful assistant.
-- Do NOT immediately ask for PC specs.
-- First understand what the user wants.
-- Only ask for specs when truly needed.
-- Ask only missing info, not full lists.
-- Never repeat questions.
-- Never behave like a checklist bot.
+CORE RULES:
+- You ALWAYS remember everything the user says in the conversation.
+- If the user gives PC specs (CPU, GPU, RAM, etc), you must store and use them.
+- NEVER ask for specs again if they were already given.
+- Answer directly without unnecessary questions.
+- If user asks "what are my specs", extract them from chat history.
+- If user asks "upgrade", immediately give clear upgrade advice based on known specs.
 
-STYLE:
-- Friendly, natural, conversational
-- Short when possible, detailed when needed
+BEHAVIOR:
+- Be direct and confident.
+- Do not act like a chatbot that forgets things.
+- Do not repeat questions.
+- Do not stall with “tell me more”.
+
+GOAL:
+- Act like a real PC expert who remembers everything and gives instant answers.
 `
           },
-          ...history,
+
+          ...history.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+
           {
             role: "user",
             content: message
@@ -68,8 +77,10 @@ STYLE:
       }
     );
 
+    const aiReply = response.data.choices[0].message.content;
+
     return res.json({
-      reply: response.data.choices[0].message.content
+      reply: aiReply
     });
 
   } catch (error) {
