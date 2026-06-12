@@ -18,12 +18,11 @@ function addMessage(text, type) {
   const div = document.createElement("div");
   div.classList.add("msg", type);
   div.innerText = text;
-
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-/* start screen transition */
+/* start screen */
 function startChat() {
   landing.style.opacity = "0";
 
@@ -36,12 +35,11 @@ function startChat() {
 /* send message */
 async function sendMessage() {
   const input = document.getElementById("input");
-  const message = input.value;
+  const message = input.value.trim();
 
   if (!message) return;
 
   startChat();
-
   addMessage(message, "user");
   input.value = "";
 
@@ -54,11 +52,21 @@ async function sendMessage() {
       body: JSON.stringify({ message })
     });
 
+    // safety check (IMPORTANT)
+    if (!res.ok) {
+      throw new Error("Server error: " + res.status);
+    }
+
     const data = await res.json();
+
+    if (!data.reply) {
+      throw new Error("No reply from backend");
+    }
+
     addMessage(data.reply, "bot");
 
   } catch (err) {
-    addMessage("Error: cannot connect to server", "bot");
     console.error(err);
+    addMessage("❌ Backend not responding. Try again.", "bot");
   }
 }
