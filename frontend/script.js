@@ -42,6 +42,30 @@ function addMessage(text, type) {
 }
 
 /* =========================
+   TYPING INDICATOR
+========================= */
+let typingBubble = null;
+
+function showTyping() {
+  if (typingBubble) return;
+
+  typingBubble = document.createElement("div");
+  typingBubble.classList.add("msg", "bot");
+  typingBubble.style.opacity = "0.7";
+  typingBubble.innerText = "LimuAI is typing...";
+  chat.appendChild(typingBubble);
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+  if (typingBubble) {
+    typingBubble.remove();
+    typingBubble = null;
+  }
+}
+
+/* =========================
    START CHAT
 ========================= */
 function startChat() {
@@ -61,8 +85,11 @@ async function sendMessage() {
   if (!message) return;
 
   startChat();
+
   addMessage(message, "user");
   inputEl.value = "";
+
+  showTyping();
 
   try {
     const res = await fetch("https://limuai-backend.onrender.com/chat", {
@@ -82,13 +109,16 @@ async function sendMessage() {
 
     const data = await res.json();
 
+    hideTyping();
+
     if (!data || !data.reply) {
-      throw new Error("Invalid response from server");
+      throw new Error("Invalid response");
     }
 
     addMessage(data.reply, "bot");
 
   } catch (err) {
+    hideTyping();
     console.error(err);
     addMessage("❌ Backend not responding. Try again.", "bot");
   }
