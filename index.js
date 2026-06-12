@@ -1,95 +1,114 @@
-const chat = document.getElementById("chat");
-const landing = document.getElementById("landing");
-const input = document.getElementById("input");
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
+require("dotenv").config();
 
-/* =========================
-   SESSION (FIXED - AUTO)
-========================= */
-let sessionId = localStorage.getItem("sessionId");
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-if (!sessionId) {
-  sessionId = crypto.randomUUID();
-  localStorage.setItem("sessionId", sessionId);
-}
+app.use(cors());
+app.use(express.json());
 
-/* =========================
-   PARTICLES
-========================= */
-function createParticles() {
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement("div");
-    p.classList.add("particle");
-    p.style.left = Math.random() * 100 + "vw";
-    p.style.animationDuration = 3 + Math.random() * 5 + "s";
-    document.body.appendChild(p);
+console.log(
+  "OPENROUTER KEY EXISTS:",
+  process.env.OPENROUTER_API_KEY ? "YES" : "NO"
+);
+
+// =========================
+// SAFE MEMORY STORAGE
+// =========================
+const conversations = {};
+
+// =========================
+// HEALTH CHECK
+// =========================
+app.get("/", (req, res) => {
+  res.send("🧠 LimuAI running (stable memory version)");
+});
+
+// =========================
+// CHAT ROUTE
+// =========================
+app.post("/chat", async (req, res) => {
+  const { message, sessionId } = req.body;
+
+  if (!message) {
+    return res.json({ reply: "No message received" });
   }
-}
-createParticles();
 
-/* =========================
-   CHAT UI
-========================= */
-function addMessage(text, type) {
-  const div = document.createElement("div");
-  div.classList.add("msg", type);
-  div.innerText = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+  // SAFE SESSION HANDLING (NO CRASH)
+  const sid = sessionId || "guest";
 
-/* =========================
-   START CHAT
-========================= */
-function startChat() {
-  landing.style.opacity = "0";
+  if (!conversations[sid]) {
+    conversations[sid] = [];
+  }
 
-  setTimeout(() => {
-    landing.style.display = "none";
-    chat.classList.remove("hidden");
-  }, 400);
-}
+  const history = conversations[sid];
 
-/* =========================
-   SEND MESSAGE
-========================= */
-async function sendMessage() {
-  const message = input.value.trim();
-  if (!message) return;
-
-  startChat();
-
-  addMessage(message, "user");
-  input.value = "";
+  // store user message
+  history.push({
+    role: "user",
+    content: message
+  });
 
   try {
-    const res = await fetch("https://limuai-backend.onrender.com/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "meta-llama/llama-3.1-8b-instruct",
+        messages: [
+          {
+            role: "system",
+            content: `
+You are LimuAI, a PC hardware expert assistant.
+
+RULES:
+- Never invent PC specs
+- If unknown, say unknown
+- Use only conversation context
+- Be accurate, simple, and helpful
+- Remember info within this session only
+`
+          },
+          ...history
+        ]
       },
-      body: JSON.stringify({
-        message: message,
-        sessionId: sessionId
-      })
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://jorgolimuai.netlify.app",
+          "X-Title": "LimuAI"
+        }
+      }
+    );
+
+    const aiReply = response.data.choices[0].message.content;
+
+    // store bot reply
+    history.push({
+      role: "assistant",
+      content: aiReply
     });
 
-    if (!res.ok) {
-      throw new Error("Server error: " + res.status);
+    // prevent infinite memory growth (keep last 20 messages)
+    if (history.length > 20) {
+      conversations[sid] = history.slice(-20);
     }
 
-    const data = await res.json();
+    return res.json({ reply: aiReply });
+  } catch (error) {
+    console.log("OPENROUTER ERROR:", error.response?.data || error.message);
 
-    addMessage(data.reply, "bot");
-
-  } catch (err) {
-    console.error(err);
-    addMessage("❌ Backend not responding. Try again.", "bot");
+    return res.json({
+      reply: "AI error (please try again)"
+    });
   }
-}
+});
 
-/* =========================
-   ENTER KEY SUPPORT
-========================= */
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+// =========================
+// START SERVER
+// =========================
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("🚀 Server running on port " + PORT);
 });
