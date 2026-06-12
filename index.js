@@ -1,130 +1,103 @@
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-require("dotenv").config();
+const chat = document.getElementById("chat");
+const landing = document.getElementById("landing");
+const input = document.getElementById("input");
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-console.log(
-  "OPENROUTER KEY EXISTS:",
-  process.env.OPENROUTER_API_KEY ? "YES" : "NO"
-);
-
-// =========================
-// MEMORY (FAST + COMPRESSED)
-// =========================
-const conversations = {};
-const summaries = {};
-
-// simple auto-summary trigger
-function shouldCompress(history) {
-  return history.length > 14;
+/* -----------------------------
+   SESSION ID (PER USER MEMORY)
+------------------------------ */
+function getSessionId() {
+  let id = localStorage.getItem("sessionId");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("sessionId", id);
+  }
+  return id;
 }
 
-// VERY light summary (no extra API calls)
-function quickSummary(history) {
-  const lastSpecs = history
-    .filter(m =>
-      m.content.toLowerCase().includes("rx") ||
-      m.content.toLowerCase().includes("gtx") ||
-      m.content.toLowerCase().includes("rtx") ||
-      m.content.toLowerCase().includes("i5") ||
-      m.content.toLowerCase().includes("ryzen") ||
-      m.content.toLowerCase().includes("ram")
-    )
-    .slice(-5)
-    .map(m => m.content)
-    .join(" | ");
+const sessionId = getSessionId();
 
-  return lastSpecs || summaries["none"] || "";
+/* -----------------------------
+   PARTICLES
+------------------------------ */
+function createParticles() {
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement("div");
+    p.classList.add("particle");
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.animationDuration = 3 + Math.random() * 5 + "s";
+    document.body.appendChild(p);
+  }
+}
+createParticles();
+
+/* -----------------------------
+   UI MESSAGE RENDER
+------------------------------ */
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.classList.add("msg", type);
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-// Health check
-app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (optimized memory version)");
-});
+/* -----------------------------
+   START CHAT
+------------------------------ */
+function startChat() {
+  landing.style.opacity = "0";
 
-// CHAT ROUTE
-app.post("/chat", async (req, res) => {
-  const { message, sessionId = "global" } = req.body;
+  setTimeout(() => {
+    landing.style.display = "none";
+    chat.classList.remove("hidden");
+  }, 400);
+}
 
-  if (!message) {
-    return res.json({ reply: "No message received" });
-  }
+/* -----------------------------
+   SEND MESSAGE
+------------------------------ */
+async function sendMessage() {
+  const message = input.value.trim();
+  if (!message) return;
 
-  if (!conversations[sessionId]) {
-    conversations[sessionId] = [];
-    summaries[sessionId] = "";
-  }
+  startChat();
 
-  conversations[sessionId].push({
-    role: "user",
-    content: message
-  });
-
-  // compress memory (keep only last messages)
-  if (shouldCompress(conversations[sessionId])) {
-    summaries[sessionId] =
-      quickSummary(conversations[sessionId]) || summaries[sessionId];
-
-    conversations[sessionId] = conversations[sessionId].slice(-6);
-  }
+  addMessage(message, "user");
+  input.value = "";
 
   try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "meta-llama/llama-3.1-8b-instruct",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are LimuAI, a PC hardware expert assistant.
-
-MEMORY:
-${summaries[sessionId] || "No stored memory yet"}
-
-RULES:
-- Use memory if available
-- Never invent PC specs
-- If unknown, say unknown
-- Be direct, short, and helpful
-`
-          },
-          ...conversations[sessionId]
-        ]
+    const res = await fetch("https://limuai-backend.onrender.com/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://jorgolimuai.netlify.app",
-          "X-Title": "LimuAI"
-        }
-      }
-    );
-
-    const aiReply = response.data.choices[0].message.content;
-
-    conversations[sessionId].push({
-      role: "assistant",
-      content: aiReply
+      body: JSON.stringify({
+        message,
+        sessionId
+      })
     });
 
-    return res.json({ reply: aiReply });
-  } catch (error) {
-    console.log("OPENROUTER ERROR:", error.response?.data || error.message);
+    if (!res.ok) {
+      throw new Error("Server error: " + res.status);
+    }
 
-    return res.json({
-      reply: "AI error (OpenRouter failed request)"
-    });
+    const data = await res.json();
+
+    if (!data.reply) {
+      throw new Error("No reply from backend");
+    }
+
+    addMessage(data.reply, "bot");
+
+  } catch (err) {
+    console.error(err);
+    addMessage("❌ Backend not responding. Try again.", "bot");
   }
-});
+}
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🚀 Server running on port " + PORT);
+/* -----------------------------
+   ENTER KEY SUPPORT
+------------------------------ */
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
 });
