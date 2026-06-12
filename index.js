@@ -23,7 +23,7 @@ const conversations = {};
 // HEALTH CHECK
 // =========================
 app.get("/", (req, res) => {
-  res.send("🧠 LimuAI running (stable)");
+  res.send("🧠 LimuAI running (session-based memory)");
 });
 
 // =========================
@@ -36,8 +36,14 @@ app.post("/chat", async (req, res) => {
     return res.json({ reply: "No message received" });
   }
 
-  // If no sessionId → auto-generate one (NO BREAKING)
-  const sid = sessionId || "global";
+  // 🔥 FIX: STRICT SESSION ISOLATION
+  if (!sessionId) {
+    return res.json({
+      reply: "Missing sessionId (frontend must generate one per browser)"
+    });
+  }
+
+  const sid = sessionId;
 
   if (!conversations[sid]) {
     conversations[sid] = [];
@@ -61,13 +67,16 @@ app.post("/chat", async (req, res) => {
             content: `
 You are LimuAI, a PC hardware assistant.
 
-RULES:
-- Do NOT assume user identity or names
-- Do NOT invent names like "Jorgo"
-- Treat each session as separate user
-- Only use info provided in this chat
-- If missing info, ask for it
-- Be clear, technical, and helpful
+You are:
+- helpful
+- technical
+- concise
+
+Rules:
+- Use ONLY conversation context from this session
+- Do NOT assume identity or personal data
+- Do NOT invent facts not provided by user
+- If something is unknown, ask for it
 `
           },
           ...history
@@ -90,12 +99,13 @@ RULES:
       content: aiReply
     });
 
-    // limit memory size
+    // limit memory
     if (history.length > 20) {
       conversations[sid] = history.slice(-20);
     }
 
     return res.json({ reply: aiReply });
+
   } catch (error) {
     console.log("OPENROUTER ERROR:", error.response?.data || error.message);
 
@@ -105,9 +115,6 @@ RULES:
   }
 });
 
-// =========================
-// START SERVER
-// =========================
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 Server running on port " + PORT);
 });
