@@ -1,8 +1,9 @@
 const chat = document.getElementById("chat");
 const landing = document.getElementById("landing");
+const inputEl = document.getElementById("input");
 
 /* =========================
-   SESSION SYSTEM (FIX)
+   SESSION SYSTEM
 ========================= */
 function getSessionId() {
   let id = localStorage.getItem("sessionId");
@@ -56,14 +57,12 @@ function startChat() {
    SEND MESSAGE
 ========================= */
 async function sendMessage() {
-  const input = document.getElementById("input");
-  const message = input.value.trim();
-
+  const message = inputEl.value.trim();
   if (!message) return;
 
   startChat();
   addMessage(message, "user");
-  input.value = "";
+  inputEl.value = "";
 
   try {
     const res = await fetch("https://limuai-backend.onrender.com/chat", {
@@ -72,8 +71,8 @@ async function sendMessage() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        message: message,
-        sessionId: getSessionId()   // 🔥 FIXED
+        message,
+        sessionId: getSessionId()
       })
     });
 
@@ -83,6 +82,10 @@ async function sendMessage() {
 
     const data = await res.json();
 
+    if (!data || !data.reply) {
+      throw new Error("Invalid response from server");
+    }
+
     addMessage(data.reply, "bot");
 
   } catch (err) {
@@ -90,3 +93,10 @@ async function sendMessage() {
     addMessage("❌ Backend not responding. Try again.", "bot");
   }
 }
+
+/* =========================
+   ENTER KEY SUPPORT
+========================= */
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
