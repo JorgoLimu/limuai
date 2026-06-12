@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
 
-  <!-- ✅ IMPORTANT MOBILE FIX -->
+  <!-- MOBILE FIX (IMPORTANT) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>LimuAI</title>
+
+  <!-- cache bust -->
   <link rel="stylesheet" href="style.css?v=11" />
 </head>
 
@@ -24,8 +26,8 @@
 <img class="icon i3" src="https://cdn-icons-png.flaticon.com/512/2721/2721297.png">
 <img class="icon i4" src="https://cdn-icons-png.flaticon.com/512/4149/4149688.png">
 
+<!-- LANDING -->
 <div class="landing" id="landing">
-
   <div class="card">
 
     <div class="logo">
@@ -46,7 +48,10 @@
     </div>
 
     <h1>LimuAI</h1>
-    <div class="subtitle">PC Troubleshooting AI Assistant</div>
+
+    <div class="subtitle">
+      PC Troubleshooting AI Assistant
+    </div>
 
     <div class="substatus">
       system diagnostics • performance analysis • troubleshooting guidance
@@ -55,13 +60,20 @@
   </div>
 </div>
 
+<!-- CHAT -->
 <div class="chat hidden" id="chat"></div>
 
+<!-- INPUT -->
 <div class="input-area">
-  <input id="input" placeholder="Message LimuAI..." autocomplete="off" inputmode="text" />
+  <input id="input"
+         placeholder="Message LimuAI..."
+         autocomplete="off"
+         inputmode="text" />
+
   <button onclick="sendMessage()">Send</button>
 </div>
 
+<!-- SCRIPT -->
 <script src="script.js?v=11" defer></script>
 
 </body>
