@@ -1,97 +1,77 @@
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-require("dotenv").config();
+const chat = document.getElementById("chat");
+const landing = document.getElementById("landing");
+const input = document.getElementById("input");
 
-const app = express();
+/* CHAT MEMORY */
+let messages = [];
 
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-console.log("OPENROUTER KEY EXISTS:", process.env.OPENROUTER_API_KEY ? "YES" : "NO");
-
-// Health check
-app.get("/", (req, res) => {
-  res.send("🧠 LimuAI backend is running (OpenRouter version)");
-});
-
-// CHAT ROUTE
-app.post("/chat", async (req, res) => {
-  const message = req.body.message;
-  const history = req.body.history || [];
-
-  if (!message) {
-    return res.json({ reply: "No message received" });
+/* particles */
+function createParticles() {
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement("div");
+    p.classList.add("particle");
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.animationDuration = (3 + Math.random() * 5) + "s";
+    document.body.appendChild(p);
   }
+}
+createParticles();
+
+/* UI message */
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.classList.add("msg", type);
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+/* start chat */
+function startChat() {
+  landing.style.opacity = "0";
+
+  setTimeout(() => {
+    landing.style.display = "none";
+    chat.classList.remove("hidden");
+  }, 400);
+}
+
+/* SEND MESSAGE */
+async function sendMessage() {
+  const message = input.value.trim();
+  if (!message) return;
+
+  startChat();
+
+  addMessage(message, "user");
+  input.value = "";
+
+  // store user message
+  messages.push({ role: "user", content: message });
 
   try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "meta-llama/llama-3.1-8b-instruct",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are LimuAI, a highly intelligent PC hardware expert assistant.
-
-CORE RULES:
-- You ALWAYS remember everything the user says in the conversation.
-- If the user gives PC specs (CPU, GPU, RAM, etc), you must store and use them.
-- NEVER ask for specs again if they were already given.
-- Answer directly without unnecessary questions.
-- If user asks "what are my specs", extract them from chat history.
-- If user asks "upgrade", immediately give clear upgrade advice based on known specs.
-
-BEHAVIOR:
-- Be direct and confident.
-- Do not act like a chatbot that forgets things.
-- Do not repeat questions.
-- Do not stall with “tell me more”.
-
-GOAL:
-- Act like a real PC expert who remembers everything and gives instant answers.
-`
-          },
-
-          ...history.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-
-          {
-            role: "user",
-            content: message
-          }
-        ]
+    const res = await fetch("https://limuai-backend.onrender.com/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://jorgolimuai.netlify.app",
-          "X-Title": "LimuAI"
-        }
-      }
-    );
-
-    const aiReply = response.data.choices[0].message.content;
-
-    return res.json({
-      reply: aiReply
+      body: JSON.stringify({
+        message: message,
+        history: messages
+      })
     });
 
-  } catch (error) {
-    console.log("OPENROUTER ERROR:", error.response?.data || error.message);
+    if (!res.ok) throw new Error("Server error");
 
-    return res.json({
-      reply: "AI error (OpenRouter failed request)"
-    });
+    const data = await res.json();
+
+    addMessage(data.reply, "bot");
+
+    // store bot reply
+    messages.push({ role: "assistant", content: data.reply });
+
+  } catch (err) {
+    console.error(err);
+    addMessage("❌ Backend not responding. Try again.", "bot");
   }
-});
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🚀 Server running on port " + PORT);
-});
+}
