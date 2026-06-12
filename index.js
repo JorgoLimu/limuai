@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 // CHAT ROUTE
 app.post("/chat", async (req, res) => {
   const message = req.body.message;
+  const history = req.body.history || [];
 
   if (!message) {
     return res.json({ reply: "No message received" });
@@ -33,9 +34,24 @@ app.post("/chat", async (req, res) => {
         messages: [
           {
             role: "system",
-            content:
-              "You are LimuAI, a PC specialist AI. Always ask for the user's specs first (CPU, GPU, RAM, storage, motherboard, PSU, monitor resolution, budget, and intended use). Never assume specs. Give accurate PC building, upgrade, troubleshooting, and performance advice based on the user's hardware and needs."
+            content: `
+You are LimuAI, a smart PC assistant like ChatGPT.
+
+RULES:
+- Respond naturally like a helpful assistant.
+- Do NOT immediately ask for PC specs.
+- First understand what the user wants.
+- Only ask for specs when truly needed.
+- Ask only missing info, not full lists.
+- Never repeat questions.
+- Never behave like a checklist bot.
+
+STYLE:
+- Friendly, natural, conversational
+- Short when possible, detailed when needed
+`
           },
+          ...history,
           {
             role: "user",
             content: message
@@ -52,10 +68,8 @@ app.post("/chat", async (req, res) => {
       }
     );
 
-    const aiReply = response.data.choices[0].message.content;
-
     return res.json({
-      reply: aiReply
+      reply: response.data.choices[0].message.content
     });
 
   } catch (error) {
