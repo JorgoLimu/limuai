@@ -110,6 +110,44 @@ h1 {
   text-transform: uppercase;
 }
 
+/* 🔥 VERSION BADGE (NEW CLEAN ADDITION) */
+.version-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  color: rgba(0, 245, 255, 0.9);
+
+  background: rgba(0, 245, 255, 0.08);
+  border: 1px solid rgba(0, 245, 255, 0.25);
+
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.15);
+}
+
+.version-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f5ff;
+  box-shadow: 0 0 8px #00f5ff;
+  animation: pulseDot 1.8s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 /* CHAT */
 .chat {
   position: fixed;
