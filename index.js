@@ -10,6 +10,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// DEBUG (checks if Render has the key)
+console.log("GROQ KEY EXISTS:", process.env.GROQ_API_KEY ? "YES" : "NO");
+
 // Health check
 app.get("/", (req, res) => {
   res.send("🧠 LimuAI backend is running");
@@ -42,7 +45,7 @@ app.post("/chat", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          Authorization: `Bearer ${process.env.GROQ_API_KEY?.trim()}`,
           "Content-Type": "application/json",
           "User-Agent": "Mozilla/5.0"
         }
@@ -57,8 +60,8 @@ app.post("/chat", async (req, res) => {
 
   } catch (error) {
     console.log("===== GROQ ERROR =====");
-    console.log(error.response?.status);
-    console.log(error.response?.data || error.message);
+    console.log("STATUS:", error.response?.status);
+    console.log("DATA:", error.response?.data || error.message);
     console.log("======================");
 
     return res.json({
